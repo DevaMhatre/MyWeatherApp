@@ -1,39 +1,48 @@
 const getWeather = async (city) => {
-    // Accessing variables from config.js
-    const url = `https://weather-by-api-ninjas.p.rapidapi.com/v1/weather?city=${city}`;
-    const options = {
-        method: 'GET',
-        headers: {
-            'x-rapidapi-key': API_CONFIG.KEY,
-            'x-rapidapi-host': API_CONFIG.HOST
-        }
-    };
+    // OpenWeather uses 'q' for city and 'units=metric' for Celsius
+    const url = `${API_CONFIG.URL}?q=${city}&appid=${API_CONFIG.KEY}&units=metric`;
 
     try {
         const cityNameElement = document.getElementById('cityName');
         if (cityNameElement) cityNameElement.innerHTML = city;
 
-        const response = await fetch(url, options);
-        if (!response.ok) throw new Error('City not found');
+        const response = await fetch(url);
+        
+        // If the city isn't found or key is invalid
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'City not found');
+        }
 
         const data = await response.json();
         
-        // Destructure data for clean mapping
-        const { temp, humidity, cloud_pct, feels_like, wind_speed, sunrise, sunset } = data;
+        /* OpenWeather Structure:
+           data.main.temp
+           data.wind.speed
+           data.sys.sunrise
+        */
+        const { temp, humidity, feels_like, temp_min, temp_max } = data.main;
+        const { speed } = data.wind;
+        const { sunrise, sunset } = data.sys;
+        const { all } = data.clouds;
 
-        // Update UI Elements (Mapping IDs to data)
-        document.getElementById('temp').innerHTML = document.getElementById('temp2').innerHTML = temp;
+        // Update UI Elements
+        document.getElementById('temp').innerHTML = document.getElementById('temp2').innerHTML = Math.round(temp);
         document.getElementById('humidity').innerHTML = document.getElementById('humidity2').innerHTML = humidity;
-        document.getElementById('cloud_pct').innerHTML = cloud_pct;
-        document.getElementById('feels_like').innerHTML = feels_like;
-        document.getElementById('wind_speed').innerHTML = document.getElementById('wind_speed2').innerHTML = wind_speed;
+        document.getElementById('cloud_pct').innerHTML = all;
+        document.getElementById('feels_like').innerHTML = Math.round(feels_like);
+        document.getElementById('min_temp').innerHTML = Math.round(temp_min);
+        document.getElementById('max_temp').innerHTML = Math.round(temp_max);
+        document.getElementById('wind_speed').innerHTML = document.getElementById('wind_speed2').innerHTML = speed;
         
-        // Format Unix timestamps to readable time
-        document.getElementById('sunrise').innerHTML = new Date(sunrise * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        document.getElementById('sunset').innerHTML = new Date(sunset * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        // Format Timestamps
+        const formatTime = (time) => new Date(time * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        document.getElementById('sunrise').innerHTML = formatTime(sunrise);
+        document.getElementById('sunset').innerHTML = formatTime(sunset);
 
     } catch (error) {
-        console.error("Weather Fetch Error:", error);
+        console.error("Weather Fetch Error:", error.message);
+        alert("Wait! " + error.message);
     }
 };
 
