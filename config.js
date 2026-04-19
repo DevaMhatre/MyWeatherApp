@@ -1,4 +1,4 @@
 const API_CONFIG = {
-    KEY: 'a7240560f4msh2743bd7d771a07ep1a2e16jsnbabc125b525b',
-    HOST: 'weather-by-api-ninjas.p.rapidapi.com'
+    KEY: 'd73675ede0d0bb9e90328378c1040d31', 
+    URL: 'https://api.openweathermap.org/data/2.5/weather'
 };
