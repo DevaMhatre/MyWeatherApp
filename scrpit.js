@@ -1,51 +1,64 @@
-const options = {
-    method: 'GET',
-    headers: {
-        //Put Your Headers Here
+const getWeather = async (city) => {
+    // Accessing variables from config.js
+    const url = `https://weather-by-api-ninjas.p.rapidapi.com/v1/weather?city=${city}`;
+    const options = {
+        method: 'GET',
+        headers: {
+            'x-rapidapi-key': API_CONFIG.KEY,
+            'x-rapidapi-host': API_CONFIG.HOST
+        }
+    };
+
+    try {
+        const cityNameElement = document.getElementById('cityName');
+        if (cityNameElement) cityNameElement.innerHTML = city;
+
+        const response = await fetch(url, options);
+        if (!response.ok) throw new Error('City not found');
+
+        const data = await response.json();
+        
+        // Destructure data for clean mapping
+        const { temp, humidity, cloud_pct, feels_like, wind_speed, sunrise, sunset } = data;
+
+        // Update UI Elements (Mapping IDs to data)
+        document.getElementById('temp').innerHTML = document.getElementById('temp2').innerHTML = temp;
+        document.getElementById('humidity').innerHTML = document.getElementById('humidity2').innerHTML = humidity;
+        document.getElementById('cloud_pct').innerHTML = cloud_pct;
+        document.getElementById('feels_like').innerHTML = feels_like;
+        document.getElementById('wind_speed').innerHTML = document.getElementById('wind_speed2').innerHTML = wind_speed;
+        
+        // Format Unix timestamps to readable time
+        document.getElementById('sunrise').innerHTML = new Date(sunrise * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        document.getElementById('sunset').innerHTML = new Date(sunset * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+    } catch (error) {
+        console.error("Weather Fetch Error:", error);
     }
 };
 
-const getWeather =(city)=>{
-    cityName.innerHTML= city
-    fetch('https://weather-by-api-ninjas.p.rapidapi.com/v1/weather?city='+city, options)
-    .then(response => response.json())
-    .then(response => {
-        
-        console.log(response)
-        cloud_pct.innerHTML = response.cloud_pct
-        temp.innerHTML = response.temp
-        temp2.innerHTML = response.temp
-        feels_like.innerHTML = response.feels_like
-        humidity.innerHTML = response.humidity
-        humidity2.innerHTML = response.humidity
-        min_temp.innerHTML = response.min_temp
-        max_temp.innerHTML = response.max_temp
-        wind_speed.innerHTML = response.wind_speed
-        wind_speed2.innerHTML = response.wind_speed
-        // wind_degrees.innerHTML = response.wind_degrees
-        sunrise.innerHTML = response.sunrise
-        sunset.innerHTML = response.sunset
+// Helper for event listeners
+const setupLink = (elementId, city) => {
+    const el = document.getElementById(elementId);
+    if (el) {
+        el.addEventListener("click", (e) => {
+            e.preventDefault();
+            getWeather(city);
+        });
+    }
+};
 
-    })
-    .catch(err => console.error(err));
-}
+// Initial Call
+getWeather("Mumbai");
 
-submit.addEventListener("click", (e)=>{
-    e.preventDefault()
-    getWeather(city.value)
-})
+// Setup Quick Links
+setupLink("mumbai", "Mumbai");
+setupLink("pune", "Pune");
+setupLink("alibag", "Alibag");
 
-getWeather("Mumbai")
-
-alibag.addEventListener("click", (e)=>{
-    e.preventDefault()
-    getWeather("Alibag")
-})
-mumbai.addEventListener("click", (e)=>{
-    e.preventDefault()
-    getWeather("Mumbai")
-})
-pune.addEventListener("click", (e)=>{
-    e.preventDefault()
-    getWeather("Pune")
-})
+// Search functionality
+document.getElementById('submit').addEventListener("click", (e) => {
+    e.preventDefault();
+    const cityInput = document.getElementById('city');
+    if (cityInput.value) getWeather(cityInput.value);
+});
